@@ -10,16 +10,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
-namespace Sitecore.Support.Data.DataProviders.Sql
+namespace Sitecore.Support.Data.DataProviders.SqlServer
 {
-  public class CustomSqlServerNotificationProvider : SqlServerNotificationProvider
+  public class SqlServerNotificationProvider : Sitecore.Data.DataProviders.SqlServer.SqlServerNotificationProvider
   {
-    protected CustomSqlServerNotificationProvider(SqlDataApi api, string databaseName)
+    protected SqlServerNotificationProvider(SqlDataApi api, string databaseName)
  : base(api, databaseName)
     {
     }
 
-    public CustomSqlServerNotificationProvider(string connectionStringName, string databaseName)
+    public SqlServerNotificationProvider(string connectionStringName, string databaseName)
       : base(connectionStringName, databaseName)
     {
     }
@@ -29,23 +29,17 @@ namespace Sitecore.Support.Data.DataProviders.Sql
       if (this.ShouldAutomaticallyAcceptChanges(notification))
       {
         Item item = ItemManager.GetItem(notification.Uri.ItemID, notification.Uri.Language, notification.Uri.Version, Database.GetDatabase(notification.Uri.DatabaseName));
-        try
+        if (notification is FieldChangedNotification)
         {
           FieldChangedNotification f = (FieldChangedNotification)notification;
           item.Editing.BeginEdit();
           item.Fields[f.FieldID].Reset();
           item.Editing.EndEdit();
         }
-        catch
+        else
         {
           notification.Accept(item);
         }
-
-        // Sitecore.Web.UI.Sheer.ClientPage c= Context.ClientPage;
-        //   ((VersionAddedNotification)notification).ForceAccept = true;
-        //  notification.Accept(i);
-
-        //  Context.ClientPage = c;
       }
       else
       {
@@ -55,11 +49,7 @@ namespace Sitecore.Support.Data.DataProviders.Sql
 
     private bool ShouldAutomaticallyAcceptChanges(Notification notification)
     {
-      //Accepting notifications based on the setting value
       return Settings.GetBoolSetting("ItemCloning.ForceUpdate", false);
-
-      //Acceptiing notifications of the specific type
-      //return notification is VersionAddedNotification;
     }
 
   }
